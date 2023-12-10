@@ -1,4 +1,4 @@
-#include "../../lib/user/syscall.h"
+#include <syscall.h>
 int main (int argc, char **argv) {
   int handle = open (argv[0]); 
   if (handle != -1) { 
