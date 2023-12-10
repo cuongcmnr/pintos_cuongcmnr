@@ -1,0 +1,75 @@
+             +-------------------------+
+             |         CS 212          |
+             | PROJECT 4: FILE SYSTEMS |
+             |     DESIGN DOCUMENT     |
+             +-------------------------+
+
+---- GROUP ----
+
+>> Fill in the names and email addresses of your group members.
+Tran Ba Cuong <Cuong.TB213567@sis.hust.edu.vn>
+---- PRELIMINARIES ----
+>> If you have any preliminary comments on your submission, notes for the
+>> TAs, or extra credit, please give them here.
+>> Please cite any offline or online sources you consulted while
+>> preparing your submission, other than the Pintos documentation, course
+>> text, lecture notes, and course staff.
+                SUBDIRECTORIES
+                ==============
+---- DATA STRUCTURES ----
+>> B1: Copy here the declaration of each new or changed `struct' or
+>> `struct' member, global or static variable, `typedef', or
+>> enumeration.  Identify the purpose of each in 25 words or less.
+In inode.h:
+struct inode {
+    ...
+/* True if directory, false otherwise.
+Used to distinguish between file and directory inodes. */
+    bool is_dir;
+/* Pointer to the parent directory. Used for ".." directory traversal. */
+    struct dir *parent_dir; 
+};
+In thread.h:
+struct thread {
+    ...
+/* The current dir of the process. Used for relative path traversal. */
+    struct dir *current_dir; 
+};
+---- ALGORITHMS ----
+>> B2: Describe your code for traversing a user-specified path.  How
+>> do traversals of absolute and relative paths differ?
+The code for traversing a user-specified path would start at either 
+the root directory (for absolute paths) or the current directory of 
+the process (for relative paths).
+It would then split the path into components using the '/' character 
+as a delimiter, and for each component, it would look up the 
+corresponding directory entry in the current directory and move to 
+that directory or file.
+---- SYNCHRONIZATION ----
+>> B4: How do you prevent races on directory entries?  For example,
+>> only one of two simultaneous attempts to remove a single file
+>> should succeed, as should only one of two simultaneous attempts to
+>> create a file with the same name, and so on.
+To prevent races on directory entries, you could use synchronization
+primitives like locks or semaphores. For example, you could have a 
+lock for each directory, and a process would have to acquire the lock 
+before it could modify the directory (like adding or removing a file).
+
+>> B5: Does your implementation allow a directory to be removed if it
+>> is open by a process or if it is in use as a process's current
+>> working directory?  If so, what happens to that process's future
+>> file system operations?  If not, how do you prevent it?
+The implementation does not allow a directory to be removed if it is
+open by a process or in use as a process's current working directory.
+This is enforced by keeping a count of the number of openers in the 
+inode structure (open_cnt), and not allowing a directory to be removed
+if this count is greater than zero.
+---- RATIONALE ----
+>> B6: Explain why you chose to represent the current directory of a
+>> process the way you did.
+The current directory of a process is represented as a pointer to a 
+directory structure (struct dir *current_dir) in the thread structure.
+This allows each process to have its own current directory, and makes 
+it easy to change the current directory when the process executes a 
+chdir system call.It also makes it easy to start the traversal from 
+the current directory when resolving a relative path.
