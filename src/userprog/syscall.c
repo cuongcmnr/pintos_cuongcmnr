@@ -93,7 +93,7 @@ static void syscall_handler (struct intr_frame *f UNUSED) {
         process_close_file(fd); 
         break; 
       }
-    default: {
+    default: 
         printf ("system call!\n");
         thread_exit ();
 }
