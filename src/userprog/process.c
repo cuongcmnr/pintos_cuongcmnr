@@ -23,26 +23,38 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
    FILENAME.  The new thread may be scheduled (and may even exit)
    before process_execute() returns.  Returns the new process's
    thread id, or TID_ERROR if the thread cannot be created. */
-tid_t
-process_execute (const char *file_name) 
-{
-  char *fn_copy;
-  tid_t tid;
-
-  /* Make a copy of FILE_NAME.
-     Otherwise there's a race between the caller and load(). */
-  fn_copy = palloc_get_page (0);
-  if (fn_copy == NULL)
+tid_t process_execute (const char *file_name) { 
+  char *fn_copy; 
+  tid_t tid; 
+  char *save_ptr; 
+  /* Make a copy of FILE_NAME. 
+     Otherwise there's a race between the caller and load(). */ 
+  fn_copy = palloc_get_page (0); 
+  if (fn_copy == NULL) 
+    return TID_ERROR; 
+  strlcpy (fn_copy, file_name, PGSIZE); 
+  /* Create a new thread to execute FILE_NAME. */ 
+  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy); 
+  if (tid == TID_ERROR) 
+    palloc_free_page (fn_copy);  
+  /* Get the thread created by thread_create. */ 
+  struct thread *t = thread_by_tid(tid); 
+  if (t == NULL) 
+    return TID_ERROR; 
+  /* Parse the file name out of file_name. */ 
+  char *file_name_copy = palloc_get_page (0); 
+  if (file_name_copy == NULL)
     return TID_ERROR;
-  strlcpy (fn_copy, file_name, PGSIZE);
-
-  /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
-  if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+  strlcpy (file_name_copy, file_name, PGSIZE);
+  char *executable_name = strtok_r(file_name_copy, " ", &save_ptr); 
+  /* Open the file being executed and deny write access to it. */
+  t->executable = filesys_open(executable_name);
+  if (t->executable == NULL)
+    return TID_ERROR;
+  file_deny_write(t->executable);
+  palloc_free_page (file_name_copy); 
   return tid;
 }
-
 /* A thread function that loads a user process and starts it
    running. */
 static void
@@ -90,17 +102,17 @@ process_wait (tid_t child_tid UNUSED)
 }
 
 /* Free the current process's resources. */
-void
-process_exit (void)
-{
+void process_exit (void) {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
-  if (pd != NULL) 
-    {
+  if (cur->executable != NULL) { 
+    file_allow_write(cur->executable); 
+    file_close(cur->executable); 
+  } 
+  if (pd != NULL) {
       /* Correct ordering here is crucial.  We must set
          cur->pagedir to NULL before switching page directories,
          so that a timer interrupt can't switch back to the
@@ -192,16 +204,7 @@ struct Elf32_Phdr
 #define PF_X 1          /* Executable. */
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
-struct file * process_get_file (int fd) {
-  struct thread *t = thread_current (); 
-  struct list_elem *e; 
-  for (e = list_begin (&t->files); e != list_end (&t->files); e = list_next (e)){ 
-      struct file_elem *fe = list_entry (e, struct file_elem, elem); 
-      if (fe->fd == fd) 
-        return fe->file; 
-    } 
-  return NULL; 
-}
+
 static bool setup_stack (void **esp);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
@@ -212,9 +215,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
    Stores the executable's entry point into *EIP
    and its initial stack pointer into *ESP.
    Returns true if successful, false otherwise. */
-bool
-load (const char *file_name, void (**eip) (void), void **esp) 
-{
+bool load (const char *file_name, void (**eip) (void), void **esp) {
   struct thread *t = thread_current ();
   struct Elf32_Ehdr ehdr;
   struct file *file = NULL;
@@ -226,16 +227,12 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-
   /* Open executable file. */
   file = filesys_open (file_name);
-  if (file == NULL) 
-    {
+  if (file == NULL) {
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
-//call new "deny write" function when loading an executable:
-  file_deny_write (file);
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
       || memcmp (ehdr.e_ident, "\177ELF\1\1\1", 7)
@@ -248,7 +245,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
-
   /* Read program headers. */
   file_ofs = ehdr.e_phoff;
   for (i = 0; i < ehdr.e_phnum; i++) 
@@ -450,7 +446,6 @@ setup_stack (void **esp)
     }
   return success;
 }
-
 /* Adds a mapping from user virtual address UPAGE to kernel
    virtual address KPAGE to the page table.
    If WRITABLE is true, the user process may modify the page;
@@ -464,9 +459,10 @@ static bool
 install_page (void *upage, void *kpage, bool writable)
 {
   struct thread *t = thread_current ();
-
   /* Verify that there's not already a page at that virtual
      address, then map our page there. */
   return (pagedir_get_page (t->pagedir, upage) == NULL
+          && pagedir_set_page (t->pagedir, upage, kpage, writable));
+}
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
 }
