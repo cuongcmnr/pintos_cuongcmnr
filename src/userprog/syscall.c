@@ -21,33 +21,84 @@ void check_user(const uint8_t *uaddr) {
     exit(-1); 
   } 
 }
-static void syscall_handler (struct intr_frame *f UNUSED) {
-  printf ("system call!\n");
-  int syscall_number = *(int *)f->esp;
-   switch (syscall_number) {
-      case SYS_WRITE:        /* Write to a file. */ 
-        {
-          check_user ((const uint8_t *) f->esp + 16); 
-          int fd = *((int *) f->esp + 5); 
-          const void *buffer = (const void *) *((uint32_t *) f->esp + 6); 
-          unsigned size = *((unsigned *) f->esp + 7); 
-          f->eax = write (fd, buffer, size); 
-          break;
-        }
-    }
-  thread_exit ();
+static void syscall_handler (struct intr_frame *f UNUSED) { 
+  int call_num; 
+  memcpy(&call_num, f->esp, sizeof(int)); 
+  switch (call_num) {
+    case SYS_HALT: {
+        shutdown_power_off();
+        break;
+      } 
+    case SYS_CREATE: { 
+        char *file; 
+        unsigned initial_size; 
+        memcpy(&file, (char **)f->esp + 1, sizeof(char *)); 
+        memcpy(&initial_size, (unsigned *)f->esp + 2, sizeof(unsigned)); 
+        if (thread_current()->executable != NULL && strcmp(thread_current()->executable->name, file) == 0) { 
+          f->eax = false; 
+          return; 
+        } 
+        bool success = filesys_create(file, initial_size); 
+        f->eax = success; 
+        break; 
+      } 
+    case SYS_OPEN: { 
+        char *file; 
+        memcpy(&file, (char **)f->esp + 1, sizeof(char *)); 
+        if (thread_current()->executable != NULL && strcmp(thread_current()->executable->name, file) == 0) { 
+          f->eax = -1; 
+          return; 
+        } 
+        struct file *f = filesys_open(file); 
+        if (f == NULL) { 
+          f->eax = -1; 
+        } else { 
+          int fd = process_add_file(f); 
+          f->eax = fd; 
+        } 
+        break; 
+      } 
+    } 
+    case SYS_READ: { 
+        int fd; 
+        void *buffer; 
+        unsigned size; 
+        memcpy(&fd, (int *)f->esp + 1, sizeof(int)); 
+        memcpy(&buffer, (void **)f->esp + 2, sizeof(void *)); 
+        memcpy(&size, (unsigned *)f->esp + 3, sizeof(unsigned)); 
+        int bytes_read = process_read_file(fd, buffer, size); 
+        f->eax = bytes_read; 
+        break; 
+      } 
+    case SYS_WRITE: { 
+        int fd; 
+        void *buffer; 
+        unsigned size; 
+        memcpy(&fd, (int *)f->esp + 1, sizeof(int)); 
+        memcpy(&buffer, (void **)f->esp + 2, sizeof(void *)); 
+        memcpy(&size, (unsigned *)f->esp + 3, sizeof(unsigned)); 
+        int bytes_written = process_write_file(fd, buffer, size); 
+        f->eax = bytes_written; 
+        break;
+      }
+    case SYS_EXIT: { 
+        int status; 
+        memcpy(&status, (int *)f->esp + 1, sizeof(int)); 
+        process_exit(status); 
+        break; 
+      } 
+    case SYS_CLOSE: {
+        int fd; 
+        memcpy(&fd, (int *)f->esp + 1, sizeof(int)); 
+        process_close_file(fd); 
+        break; 
+      }
+    default: {
+        printf ("system call!\n");
+        thread_exit ();
 }
 int write (int fd, const void *buffer, unsigned size) { 
-  lock_acquire (&filesys_lock); 
-  struct file *file = process_get_file (fd); 
-  if (!file) { 
-    lock_release (&filesys_lock); 
-    return -1; 
-  } 
-  file_deny_write(file); 
   int bytes_written = file_write (file, buffer, size); 
-  file_allow_write(file); 
-  lock_release (&filesys_lock); 
   return bytes_written; 
 }
 bool chdir (const char *dir) {
