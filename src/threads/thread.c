@@ -278,7 +278,7 @@ thread_exit (void)
   ASSERT (!intr_context ());
 
 #ifdef USERPROG
-  process_exit ();
+  process_exit (-1);
 #endif
 
   /* Remove thread from all threads list, set our status to dying,
