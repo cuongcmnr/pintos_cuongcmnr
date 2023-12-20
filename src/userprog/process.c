@@ -46,7 +46,8 @@ tid_t process_execute (const char *file_name) {
   if (file_name_copy == NULL)
     return TID_ERROR;
   strlcpy (file_name_copy, file_name, PGSIZE);
-  char *executable_name = strtok_r(file_name_copy, " ", &save_ptr); 
+  char *executable_name = strtok_r(file_name_copy, " ", &save_ptr);
+  strlcpy(t->executable_name, executable_name, strlen(executable_name) + 1);
   /* Open the file being executed and deny write access to it. */
   t->executable = filesys_open(executable_name);
   if (t->executable == NULL)
