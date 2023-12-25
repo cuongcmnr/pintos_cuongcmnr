@@ -49,8 +49,8 @@ static void syscall_handler (struct intr_frame *f UNUSED) {
         f->eax = -1; 
         return; 
       } 
-      struct file *f = filesys_open(file); 
-      if (f == NULL) { 
+      struct file *file = filesys_open(struct file_name);
+      if (file == NULL) { 
         f->eax = -1; 
       } else { 
         int fd = process_add_file(f); 
