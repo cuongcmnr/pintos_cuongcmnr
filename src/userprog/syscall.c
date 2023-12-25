@@ -49,14 +49,21 @@ static void syscall_handler (struct intr_frame *f UNUSED) {
         f->eax = -1; 
         return; 
       } 
-      struct file *file = filesys_open(struct file_name);
+      struct file *file = filesys_open(file);
       if (file == NULL) { 
         f->eax = -1; 
       } else { 
-        int fd = process_add_file(f); 
+        int fd = process_add_file(file); 
         f->eax = fd; 
       } 
       break; 
+    }
+    case SYS_EXEC: {
+      char *cmd_line;
+      memcpy(&cmd_line, (char **)f->esp + 1, sizeof(char *));
+      tid_t tid = process_execute(cmd_line);
+      f->eax = tid;
+      break;
     }
     case SYS_READ: { 
       int fd; 
