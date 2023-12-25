@@ -34,7 +34,7 @@ static void syscall_handler (struct intr_frame *f UNUSED) {
       unsigned initial_size; 
       memcpy(&file, (char **)f->esp + 1, sizeof(char *)); 
       memcpy(&initial_size, (unsigned *)f->esp + 2, sizeof(unsigned)); 
-      if (thread_current()->executable != NULL && strcmp(thread_current()->executable->name, file) == 0) { 
+      if (thread_current()->executable != NULL && strcmp(thread_current()->executable_name, file) == 0) { 
         f->eax = false; 
         return; 
       } 
@@ -45,7 +45,7 @@ static void syscall_handler (struct intr_frame *f UNUSED) {
     case SYS_OPEN: { 
       char *file; 
       memcpy(&file, (char **)f->esp + 1, sizeof(char *)); 
-      if (thread_current()->executable != NULL && strcmp(thread_current()->executable->name, file) == 0) { 
+      if (thread_current()->executable != NULL && strcmp(thread_current()->executable_name, file) == 0) { 
         f->eax = -1; 
         return; 
       } 
