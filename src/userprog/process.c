@@ -467,3 +467,41 @@ install_page (void *upage, void *kpage, bool writable)
 }
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
 }
+/* Gets a file from the current process's list of open files. */
+struct file *process_get_file(int fd) {
+  struct thread *t = thread_current();
+  if (fd < 0 || fd >= t->next_fd) {
+    return NULL;  // Return NULL if fd is invalid.
+  }
+  return t->fd_table[fd];
+}
+/* Adds a file to the current process's list of open files. */
+int process_add_file(struct file *file) {
+  struct thread *t = thread_current();
+  t->fd_table[t->next_fd] = file;
+  return t->next_fd++;
+}
+/* Reads from a file. */
+int process_read_file(int fd, void *buffer, unsigned size) {
+  struct thread *t = thread_current();
+  if (fd < 0 || fd >= t->next_fd) {
+    return -1;  // Return -1 if fd is invalid.
+  }
+  return file_read (t->fd_table[fd], buffer, size);
+}
+/* Writes to a file. */
+int process_write_file(int fd, const void *buffer, unsigned size) {
+  struct thread *t = thread_current();
+  if (fd < 0 || fd >= t->next_fd) {
+    return -1;  // Return -1 if fd is invalid.
+  }
+  return file_write (t->fd_table[fd], buffer, size);
+}
+/* Closes a file. */
+void process_close_file(int fd) {
+  struct thread *t = thread_current();
+  if (fd >= 0 && fd < t->next_fd) {
+    file_close (t->fd_table[fd]);
+    t->fd_table[fd] = NULL;
+  }
+}

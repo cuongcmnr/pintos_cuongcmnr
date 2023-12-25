@@ -49,7 +49,7 @@ static void syscall_handler (struct intr_frame *f UNUSED) {
         f->eax = -1; 
         return; 
       } 
-      struct file *file = filesys_open(file);
+      struct file *file_ptr = filesys_open(file);
       if (file == NULL) { 
         f->eax = -1; 
       } else { 
