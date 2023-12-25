@@ -99,6 +99,8 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     struct file *executable;
     char executable_name[NAME_MAX + 1];
+    struct file *fd_table[PRI_MAX];      /* Array of file pointers. */
+    int next_fd;
 #endif
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
