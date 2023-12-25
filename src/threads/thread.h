@@ -23,7 +23,7 @@ typedef int tid_t;
 #define PRI_MIN 0                       /* Lowest priority. */
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
-
+#define NAME_MAX 255
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -98,9 +98,11 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
     struct file *executable;
+    char executable_name[NAME_MAX + 1];
 #endif
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+
   };
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
