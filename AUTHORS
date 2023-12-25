@@ -41,3 +41,5 @@ projects
 
 * Example code for condition variables is from classroom slides
   originally by Dawson Engler and updated by Mendel Roseblum.
+userprog/syscall.c:52:12: error: dereferencing pointer to incomplete type ‘struct file’
+           f->eax = -1;
