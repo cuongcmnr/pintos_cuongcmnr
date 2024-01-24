@@ -1,29 +1,4 @@
 #include "userprog/process.h"
-#include <debug.h>
-#include <inttypes.h>
-#include <round.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "userprog/gdt.h"
-#include "userprog/pagedir.h"
-#include "userprog/syscall.h"
-#include "userprog/tss.h"
-#include "filesys/directory.h"
-#include "filesys/file.h"
-#include "filesys/filesys.h"
-#include "threads/flags.h"
-#include "threads/init.h"
-#include "threads/interrupt.h"
-#include "threads/palloc.h"
-#include "threads/malloc.h"
-#include "threads/thread.h"
-#include "threads/vaddr.h"
-
-static thread_func start_process NO_RETURN;
-static bool load (const char *cmdline, void (**eip) (void), void **esp);
-static int arg_bytes (char *, char);
-struct exit_stat *process_get_child_exit_status (tid_t child_pid);
 
 /* Returns a new per-process file descriptor for an opened file.
    Only MAX_OPEN_FILES files may be open at a time by a process. */

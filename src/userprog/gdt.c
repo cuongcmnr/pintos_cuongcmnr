@@ -1,34 +1,4 @@
 #include "userprog/gdt.h"
-#include <debug.h>
-#include "userprog/tss.h"
-#include "threads/palloc.h"
-#include "threads/vaddr.h"
-
-/* The Global Descriptor Table (GDT).
-
-   The GDT, an x86-specific structure, defines segments that can
-   potentially be used by all processes in a system, subject to
-   their permissions.  There is also a per-process Local
-   Descriptor Table (LDT) but that is not used by modern
-   operating systems.
-
-   Each entry in the GDT, which is known by its byte offset in
-   the table, identifies a segment.  For our purposes only three
-   types of segments are of interest: code, data, and TSS or
-   Task-State Segment descriptors.  The former two types are
-   exactly what they sound like.  The TSS is used primarily for
-   stack switching on interrupts.
-
-   For more information on the GDT as used here, refer to
-   [IA32-v3a] 3.2 "Using Segments" through 3.5 "System Descriptor
-   Types". */
-static uint64_t gdt[SEL_CNT];
-
-/* GDT helpers. */
-static uint64_t make_code_desc (int dpl);
-static uint64_t make_data_desc (int dpl);
-static uint64_t make_tss_desc (void *laddr);
-static uint64_t make_gdtr_operand (uint16_t limit, void *base);
 
 /* Sets up a proper GDT.  The bootstrap loader's GDT didn't
    include user-mode selectors or a TSS, but we need both now. */

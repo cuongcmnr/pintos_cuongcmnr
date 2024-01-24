@@ -3,7 +3,11 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+#include <stddef.h>
+#include <string.h>
+#include "threads/init.h"
+#include "threads/pte.h"
+#include "threads/palloc.h"
 uint32_t *pagedir_create (void);
 void pagedir_destroy (uint32_t *pd);
 bool pagedir_set_page (uint32_t *pd, void *upage, void *kpage, bool rw);
@@ -14,5 +18,6 @@ void pagedir_set_dirty (uint32_t *pd, const void *upage, bool dirty);
 bool pagedir_is_accessed (uint32_t *pd, const void *upage);
 void pagedir_set_accessed (uint32_t *pd, const void *upage, bool accessed);
 void pagedir_activate (uint32_t *pd);
-
+static uint32_t *active_pd (void);
+static void invalidate_pagedir (uint32_t *);
 #endif /* userprog/pagedir.h */

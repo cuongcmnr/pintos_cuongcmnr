@@ -1,13 +1,4 @@
 #include "userprog/pagedir.h"
-#include <stdbool.h>
-#include <stddef.h>
-#include <string.h>
-#include "threads/init.h"
-#include "threads/pte.h"
-#include "threads/palloc.h"
-
-static uint32_t *active_pd (void);
-static void invalidate_pagedir (uint32_t *);
 
 /* Creates a new page directory that has mappings for kernel
    virtual addresses, but none for user virtual addresses.
