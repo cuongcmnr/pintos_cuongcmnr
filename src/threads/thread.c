@@ -1,27 +1,9 @@
 #include "threads/thread.h"
-#include "devices/timer.h"
-#include <debug.h>
-#include <stddef.h>
-#include <random.h>
-#include <stdio.h>
-#include <string.h>
-#include "threads/flags.h"
-#include "threads/interrupt.h"
-#include "threads/intr-stubs.h"
-#include "threads/palloc.h"
-#include "threads/malloc.h"
-#include "threads/switch.h"
-#include "threads/synch.h"
-#include "threads/vaddr.h"
-#include "fixed-point.h"
+
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
-#ifdef FILESYS
-#include "filesys/inode.h"
-#include "filesys/file.h"
-#include "filesys/filesys.h"
-#endif
+
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
@@ -136,9 +118,6 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT, NICE_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
-#ifdef FILESYS
-  initial_thread->cwd = ROOT_DIR_SECTOR;
-#endif
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -498,10 +477,6 @@ thread_exit (void)
   free (cur->open_files);
 #endif
 
-#ifdef FILESYS
-  if (thread_current ()->cwd_file)
-    file_close (thread_current ()->cwd_file);
-#endif
   /* Remove thread from all threads list, set our status to dying,
      and schedule another process.  That process will destroy us
      when it calls thread_schedule_tail(). */
@@ -861,15 +836,11 @@ init_thread (struct thread *t, const char *name, int priority, int nice)
     list_init (&t->locks);
   }
 
-#ifdef USERPROG
-  list_init (&t->child_exit_stats);
-  lock_init (&t->l);
-#endif
-#ifdef FILESYS
-  t->cwd = t->parent->cwd;
-  if (filesys_initialized ())
-    t->cwd_file = file_open (inode_open (t->cwd));
-#endif
+  #ifdef USERPROG
+    list_init (&t->child_exit_stats);
+    lock_init (&t->l);
+  #endif
+
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();

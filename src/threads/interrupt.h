@@ -3,7 +3,15 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+#include <debug.h>
+#include <inttypes.h>
+#include <stdio.h>
+#include "threads/flags.h"
+#include "threads/intr-stubs.h"
+#include "threads/io.h"
+#include "threads/thread.h"
+#include "threads/vaddr.h"
+#include "devices/timer.h"
 /* Interrupts on or off? */
 enum intr_level 
   {

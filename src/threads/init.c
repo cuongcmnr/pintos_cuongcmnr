@@ -1,77 +1,6 @@
 #include "threads/init.h"
-#include <console.h>
-#include <debug.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <random.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "devices/kbd.h"
-#include "devices/input.h"
-#include "devices/serial.h"
-#include "devices/shutdown.h"
-#include "devices/timer.h"
-#include "devices/vga.h"
-#include "devices/rtc.h"
-#include "threads/interrupt.h"
-#include "threads/io.h"
-#include "threads/loader.h"
-#include "threads/malloc.h"
-#include "threads/palloc.h"
-#include "threads/pte.h"
-#include "threads/thread.h"
-#ifdef USERPROG
-#include "userprog/process.h"
-#include "userprog/exception.h"
-#include "userprog/gdt.h"
-#include "userprog/syscall.h"
-#include "userprog/tss.h"
-#else
-#include "tests/threads/tests.h"
-#endif
-#ifdef FILESYS
-#include "devices/block.h"
-#include "devices/ide.h"
-#include "filesys/filesys.h"
-#include "filesys/fsutil.h"
-#endif
-
 /* Page directory with kernel mappings only. */
 uint32_t *init_page_dir;
-
-#ifdef FILESYS
-/* -f: Format the file system? */
-static bool format_filesys;
-
-/* -filesys, -scratch, -swap: Names of block devices to use,
-   overriding the defaults. */
-static const char *filesys_bdev_name;
-static const char *scratch_bdev_name;
-#ifdef VM
-static const char *swap_bdev_name;
-#endif
-#endif /* FILESYS */
-
-/* -ul: Maximum number of pages to put into palloc's user pool. */
-static size_t user_page_limit = SIZE_MAX;
-
-static void bss_init (void);
-static void paging_init (void);
-
-static char **read_command_line (void);
-static char **parse_options (char **argv);
-static void run_actions (char **argv);
-static void usage (void);
-
-#ifdef FILESYS
-static void locate_block_devices (void);
-static void locate_block_device (enum block_type, const char *name);
-#endif
-
-int main (void) NO_RETURN;
-
 /* Pintos main program. */
 int
 main (void)
@@ -247,10 +176,6 @@ parse_options (char **argv)
         filesys_bdev_name = value;
       else if (!strcmp (name, "-scratch"))
         scratch_bdev_name = value;
-#ifdef VM
-      else if (!strcmp (name, "-swap"))
-        swap_bdev_name = value;
-#endif
 #endif
       else if (!strcmp (name, "-rs"))
         random_init (atoi (value));
@@ -373,9 +298,6 @@ usage (void)
           "  -f                 Format file system device during startup.\n"
           "  -filesys=BDEV      Use BDEV for file system instead of default.\n"
           "  -scratch=BDEV      Use BDEV for scratch instead of default.\n"
-#ifdef VM
-          "  -swap=BDEV         Use BDEV for swap instead of default.\n"
-#endif
 #endif
           "  -rs=SEED           Set random number seed to SEED.\n"
           "  -mlfqs             Use multi-level feedback queue scheduler.\n"
@@ -393,9 +315,6 @@ locate_block_devices (void)
 {
   locate_block_device (BLOCK_FILESYS, filesys_bdev_name);
   locate_block_device (BLOCK_SCRATCH, scratch_bdev_name);
-#ifdef VM
-  locate_block_device (BLOCK_SWAP, swap_bdev_name);
-#endif
 }
 
 /* Figures out what block device to use for the given ROLE: the
