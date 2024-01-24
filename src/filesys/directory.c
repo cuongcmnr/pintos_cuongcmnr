@@ -1,10 +1,5 @@
 #include "filesys/directory.h"
-#include <stdio.h>
-#include <string.h>
-#include <list.h>
-#include "filesys/filesys.h"
-#include "filesys/inode.h"
-#include "threads/malloc.h"
+
 
 /* A single directory entry. */
 struct dir_entry 

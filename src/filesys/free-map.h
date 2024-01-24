@@ -4,7 +4,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "devices/block.h"
-
+#include <bitmap.h>
+#include <debug.h>
+#include "filesys/file.h"
+#include "filesys/filesys.h"
+#include "filesys/inode.h"
+#include "threads/synch.h"
 void free_map_init (void);
 void free_map_read (void);
 void free_map_create (void);

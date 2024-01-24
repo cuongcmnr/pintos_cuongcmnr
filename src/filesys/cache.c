@@ -1,27 +1,4 @@
-#include <string.h>
-#include <random.h>
-#include <debug.h>
-#include "devices/timer.h"
-#include "filesys/filesys.h"
 #include "filesys/cache.h"
-#include "threads/synch.h"
-#include "threads/thread.h"
-
-/* Number of milliseconds to wait before flushing all cached data to disk. */
-#define WRITE_BEHIND_PERIOD 5000
-
-/* Maximum size of the read-ahead queue. If the queue grows larger than this,
-   old requests will be discarded and replaced by new ones (the old ones
-   wouldn't be of use anyway, since they would be evicted by new requests
-   before having a chance to get used). */
-#define RA_QUEUE_SIZE CACHE_SIZE
-
-/* Maximum number of accesses that a slot is allowed to record. Raising this
-   constant means that a heavily-accessed slot will get more "second chances"
-   when being considered for eviction. Hence, this makes the cache more
-   efficient. On the other hand, raising the number too high could make
-   eviction take a lot of CPU time. */
-#define MAX_ACCESS          5
 
 /* cache_data contains the metadata for a single cache slot. */
 struct cache_data

@@ -4,6 +4,15 @@
 #include <stdbool.h>
 #include "filesys/off_t.h"
 #include "devices/block.h"
+#include <list.h>
+#include <debug.h>
+#include <round.h>
+#include <string.h>
+#include "filesys/filesys.h"
+#include "filesys/free-map.h"
+#include "filesys/cache.h"
+#include "threads/malloc.h"
+#include "threads/synch.h"
 
 /* Below are the status bits for an inode. */
 #define INODE_DIR 0x1                   /* Set when inode is a directory. */

@@ -3,7 +3,15 @@
 
 #include <stdbool.h>
 #include "filesys/off_t.h"
-
+#include <debug.h>
+#include <stdio.h>
+#include <string.h>
+#include "filesys/cache.h"
+#include "filesys/file.h"
+#include "filesys/free-map.h"
+#include "filesys/inode.h"
+#include "filesys/directory.h"
+#include "threads/thread.h"
 /* Sectors of system file inodes. */
 #define FREE_MAP_SECTOR 0       /* Free map file inode sector. */
 #define ROOT_DIR_SECTOR 1       /* Root directory file inode sector. */

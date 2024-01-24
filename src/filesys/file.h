@@ -3,7 +3,9 @@
 #include "devices/block.h"
 #include "filesys/off_t.h"
 #include <stdbool.h>
-
+#include <debug.h>
+#include "filesys/inode.h"
+#include "threads/malloc.h"
 struct inode;
 
 /* An open file. */
