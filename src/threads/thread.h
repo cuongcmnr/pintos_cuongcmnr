@@ -5,19 +5,11 @@
 #include <list.h>
 #include <stdint.h>
 #include "threads/synch.h"
-#include "devices/timer.h"
-#include <stddef.h>
-#include <random.h>
-#include <stdio.h>
-#include <string.h>
-#include "threads/flags.h"
-#include "threads/interrupt.h"
-#include "threads/intr-stubs.h"
-#include "threads/palloc.h"
-#include "threads/malloc.h"
-#include "threads/switch.h"
-#include "threads/vaddr.h"
-#include "fixed-point.h"
+#include "filesys/file.h"
+#include "threads/fixed-point.h"
+#ifdef FILESYS
+#include "devices/block.h"
+#endif
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -132,7 +124,11 @@ struct thread
 
     struct file *exec_file;             /* Process's opened executable file. */
 #endif
+#ifdef FILESYS
+  block_sector_t cwd;           /* Current working directory */
 
+  struct list dir_list;  /* List of directories that compose the current working directory */
+#endif
     /* For thread_sleep. */
     int64_t ticks;                      /* Tick count for sleeping threads. */
 

@@ -3,10 +3,7 @@
 
 #include <list.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include "threads/interrupt.h"
-#include "threads/thread.h"
+
 /* A counting semaphore. */
 struct semaphore 
   {
